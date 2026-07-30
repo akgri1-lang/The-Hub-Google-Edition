@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e0c9af">
+<meta charset="UTF-8">
+<title>AlexanderOS Web</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+body {
+background: #f5e9dd;
+color: #222;
+height: 100vh;
+display: flex;
+align-items: stretch;
+justify-content: center;
+}
+#root {
+width: 100%;
+max-width: 1200px;
+margin: auto;
+height: 100vh;
+position: relative;
+}
+
+/* Glowbar */
+#glowbar {
+position:absolute;
+top:0;
+left:0;
+right:0;
+height:6px;
+background:#e0c9af;
+box-shadow:0 0 12px rgba(0,0,0,0.2);
+transition:background 0.2s, box-shadow 0.2s;
+z-index:50;
+}
+
+/* Setup screen */
+#setup-screen {
+position:absolute; inset:0; background:#f5e9dd;
+display:flex; flex-direction:column; align-items:center;
+justify-content:center; gap:16px;
+}
+#setup-title { font-size:2rem; font-weight:600; }
+#setup-sub { font-size:1rem; color:#555; }
+#setup-pin {
+padding:10px 18px; border-radius:999px; border:1px solid #e0d6cc;
+font-size:1.2rem; text-align:center; background:#fff; width:180px;
+}
+#setup-save {
+padding:10px 24px; border-radius:999px; border:none;
+background:#e0c9af; color:#222; font-weight:600; cursor:pointer;
+}
+#setup-error { color:#c0392b; font-size:0.85rem; min-height:1em; }
+
+/* Lock screen */
+#lock-screen {
+position: absolute;
+inset: 0;
+display: none;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 16px;
+background: #f5e9dd;
+}
+#lock-time { font-size: 3.2rem; font-weight: 600; }
+#lock-date { font-size: 1rem; color: #555; }
+#pin-label { font-size: 0.9rem; color: #555; }
+#pin-input {
+padding: 10px 18px;
+border-radius: 999px;
+border: 1px solid #e0d6cc;
+font-size: 1.2rem;
+text-align: center;
+background: #fff;
+width: 180px;
+}
+#unlock-btn {
+margin-top: 8px;
+padding: 10px 24px;
+border-radius: 999px;
+border: none;
+background: #e0c9af;
+color: #222;
+font-weight: 600;
+cursor: pointer;
+}
+#lock-error { font-size: 0.85rem; color: #c0392b; min-height: 1em; }
+#lock-hint { font-size: 0.8rem; color: #777; }
+
+/* Home screen */
+#home-screen {
+position: absolute;
+inset: 0;
+display: none;
+flex-direction: column;
+padding: 24px 32px;
+gap: 16px;
+background: #f5e9dd;
+}
+
+#top-bar {
+display: flex;
+align-items: center;
+gap: 16px;
+margin-top:10px;
+}
+#home-time { font-size: 1.6rem; font-weight: 600; }
+#weather { font-size: 0.9rem; color: #555; }
+#top-bar-spacer { flex: 1; }
+#status-bar { font-size:0.8rem; color:#555; display:flex; gap:8px; align-items:center; }
+#quick-panel-btn {
+padding: 6px 14px;
+border-radius: 16px;
+border: none;
+background: #f3f0ea;
+color: #444;
+cursor: pointer;
+font-size: 0.85rem;
+}
+
+/* App grid */
+#app-grid {
+flex: 1;
+display: grid;
+grid-template-columns: repeat(4, minmax(0, 1fr));
+gap: 24px;
+padding-top: 8px;
+}
+.app-btn { border: none; background: transparent; cursor: pointer; }
+.app-inner { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.app-emoji { font-size: 1.6rem; }
+.app-label { font-size: 0.75rem; color: #444; }
+
+/* Dock */
+#dock-wrap { display: flex; justify-content: center; margin-top: 8px; }
+#dock {
+display: flex;
+gap: 12px;
+padding: 8px 18px;
+border-radius: 22px;
+border: 1px solid #e0d6c7;
+background: rgba(255,255,255,0.92);
+}
+
+/* Quick panel */
+#quick-panel {
+position: absolute;
+top: 80px;
+left: 50%;
+transform: translateX(-50%);
+width: min(600px, 90%);
+padding: 18px;
+border-radius: 24px;
+border: 1px solid #e2d6c7;
+background: rgba(255,255,255,0.96);
+display: none;
+flex-direction: column;
+gap: 12px;
+z-index:40;
+}
+#quick-panel h2 { font-size: 1.1rem; font-weight: 600; }
+.qp-row { display: flex; gap: 8px; }
+.qp-btn {
+flex: 1;
+padding: 6px 12px;
+border-radius: 18px;
+border: 1px solid #e2d6c7;
+background: #fff;
+color: #333;
+font-size: 0.85rem;
+cursor: pointer;
+}
+#brightness-bar {
+width: 100%;
+border-radius: 999px;
+background: #f3e4d3;
+padding: 4px 6px;
+}
+#brightness-fill {
+width: 60%;
+height: 8px;
+border-radius: 999px;
+background: #e0c9af;
+}
+#notif-card {
+border-radius: 16px;
+padding: 10px;
+background: #f7ebdf;
+color: #666;
+font-size: 0.85rem;
+}
+
+/* App windows */
+.window {
+position: absolute;
+top: 120px;
+left: 120px;
+width: 480px;
+max-width: 90%;
+background: #fff;
+border-radius: 18px;
+border: 1px solid #e0e0e0;
+box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+z-index:30;
+}
+.window-titlebar {
+background: #f3f0ea;
+padding: 6px 12px;
+display: flex;
+align-items: center;
+}
+.window-title { font-size: 0.9rem; font-weight: 600; }
+.window-spacer { flex: 1; }
+.window-close {
+border: none;
+background: #e0d6cc;
+border-radius: 10px;
+width: 28px;
+height: 24px;
+cursor: pointer;
+}
+.window-body {
+padding: 10px 12px;
+font-size: 0.85rem;
+color: #333;
+overflow: auto;
+max-height: 300px;
+}
+
+/* App switcher */
+#app-switcher {
+position:absolute;
+inset:0;
+background:rgba(0,0,0,0.35);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:60;
+}
+#app-switcher-inner {
+background:#f5e9dd;
+border-radius:24px;
+padding:16px;
+width:min(600px,90%);
+}
+#app-switcher-inner h2 { font-size:1rem; margin-bottom:8px; }
+#switcher-list { display:flex; flex-wrap:wrap; gap:8px; }
+.switcher-item {
+padding:6px 10px;
+border-radius:16px;
+background:#fff;
+border:1px solid #e0d6c7;
+font-size:0.8rem;
+cursor:pointer;
+}
+</style>
+</head>
+<body>
+<div id="root">
+<div id="glowbar"></div>
+
+<!-- Setup screen -->
+<div id="setup-screen">
+<div id="setup-title">Welcome to AlexanderOS</div>
+<div id="setup-sub">Set your 6‑digit PIN</div>
+<input id="setup-pin" type="password" maxlength="6">
+<button id="setup-save">Save PIN</button>
+<div id="setup-error"></div>
+</div>
+
+<!-- Lock screen -->
+<div id="lock-screen">
+<div id="lock-time"></div>
+<div id="lock-date"></div>
+<div id="pin-label">Enter 6-digit PIN</div>
+<input id="pin-input" type="password" maxlength="6" />
+<button id="unlock-btn">Unlock</button>
+<div id="lock-error"></div>
+<div id="lock-hint">PIN is what you just set</div>
+</div>
+
+<!-- Home screen -->
+<div id="home-screen">
+<div id="top-bar">
+<div id="home-time"></div>
+<div id="weather">Loading weather…</div>
+<div id="top-bar-spacer"></div>
+<div id="status-bar">
+<span id="wifi-status">Wi‑Fi: ?</span>
+<span id="bt-status">BT: ?</span>
+</div>
+<button id="quick-panel-btn">Quick panel</button>
+</div>
+
+<div id="app-grid"></div>
+
+<div id="dock-wrap">
+<div id="dock"></div>
+</div>
+</div>
+
+<!-- Quick panel -->
+<div id="quick-panel">
+<h2>Quick panel</h2>
+<div class="qp-row">
+<button class="qp-btn">Wi‑Fi</button>
+<button class="qp-btn">Bluetooth</button>
+<button class="qp-btn">Dark mode</button>
+</div>
+<div>Brightness</div>
+<div id="brightness-bar">
+<div id="brightness-fill"></div>
+</div>
+<div>Notifications</div>
+<div id="notif-card">No new notifications</div>
+</div>
+
+<!-- App switcher -->
+<div id="app-switcher">
+<div id="app-switcher-inner">
+<h2>App switcher</h2>
+<div id="switcher-list"></div>
+</div>
+</div>
+</div>
+
+<script>
+let currentPin = null;
+let windows = [];
+let windowCounter = 0;
+
+function setGlow(color, flash=false) {
+const bar = document.getElementById("glowbar");
+bar.style.background = color;
+bar.style.boxShadow = flash ? "0 0 18px rgba(0,0,0,0.4)" : "0 0 12px rgba(0,0,0,0.2)";
+if (flash) {
+setTimeout(() => {
+bar.style.boxShadow = "0 0 12px rgba(0,0,0,0.2)";
+}, 600);
+}
+}
+
+function showSetupOrLock() {
+const stored = localStorage.getItem("alexanderos_pin");
+if (stored && stored.length === 6) {
+currentPin = stored;
+document.getElementById("setup-screen").style.display = "none";
+document.getElementById("lock-screen").style.display = "flex";
+} else {
+document.getElementById("setup-screen").style.display = "flex";
+document.getElementById("lock-screen").style.display = "none";
+}
+}
+showSetupOrLock();
+
+document.getElementById("setup-save").addEventListener("click", () => {
+const pin = document.getElementById("setup-pin").value;
+const err = document.getElementById("setup-error");
+if (pin.length === 6) {
+currentPin = pin;
+localStorage.setItem("alexanderos_pin", pin);
+err.textContent = "";
+document.getElementById("setup-screen").style.display = "none";
+document.getElementById("lock-screen").style.display = "flex";
+setGlow("#e0c9af");
+} else {
+err.textContent = "PIN must be exactly 6 digits.";
+setGlow("#c0392b", true);
+}
+});
+
+function updateLockTime() {
+const now = new Date();
+document.getElementById("lock-time").textContent =
+now.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+document.getElementById("lock-date").textContent =
+now.toLocaleDateString(undefined, {weekday: "long", day: "numeric", month: "long", year: "numeric"});
+}
+setInterval(updateLockTime, 1000);
+updateLockTime();
+
+function updateHomeTime() {
+const now = new Date();
+document.getElementById("home-time").textContent =
+now.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+}
+setInterval(updateHomeTime, 1000);
+updateHomeTime();
+
+document.getElementById("unlock-btn").addEventListener("click", tryUnlock);
+document.getElementById("pin-input").addEventListener("keydown", e => {
+if (e.key === "Enter") tryUnlock();
+});
+
+function tryUnlock() {
+const pinInput = document.getElementById("pin-input");
+const errorEl = document.getElementById("lock-error");
+
+if (!currentPin) {
+errorEl.textContent = "PIN not set. Restart AlexanderOS.";
+setGlow("#c0392b", true);
+return;
+}
+
+if (pinInput.value === currentPin) {
+errorEl.textContent = "";
+document.getElementById("lock-screen").style.display = "none";
+document.getElementById("home-screen").style.display = "flex";
+setGlow("#a8d5a2");
+} else {
+errorEl.textContent = "Incorrect PIN. Try again.";
+setGlow("#c0392b", true);
+}
+}
+
+function updateStatus() {
+const wifi = document.getElementById("wifi-status");
+const bt = document.getElementById("bt-status");
+wifi.textContent = "Wi‑Fi: " + (navigator.onLine ? "Online" : "Offline");
+bt.textContent = "BT: Unknown";
+}
+updateStatus();
+window.addEventListener("online", updateStatus);
+window.addEventListener("offline", updateStatus);
+
+async function loadWeather() {
+const weatherEl = document.getElementById("weather");
+try {
+const url = "https://api.open-meteo.com/v1/forecast?latitude=-38.3833&longitude=142.4833&current_weather=true";
+const res = await fetch(url);
+const data = await res.json();
+const cw = data.current_weather;
+weatherEl.textContent =
+`Warrnambool • ${cw.temperature.toFixed(1)}°C • Wind ${cw.windspeed.toFixed(1)} km/h`;
+} catch {
+weatherEl.textContent = "Weather unavailable";
+document.getElementById("notif-card").textContent = "Weather failed to load.";
+setGlow("#f39c12", true);
+}
+}
+loadWeather();
+
+const apps = [
+{emoji: "📍", label: "Maps", url: "https://maps.google.com", type: "web", color:"#2ecc71"},
+{emoji: "📄", label: "Docs", url: "https://docs.google.com", type: "web", color:"#3498db"},
+{emoji: "🎵", label: "Music", url: "https://open.spotify.com", type: "web", color:"#1DB954"},
+{emoji: "📝", label: "Keep", url: "https://keep.google.com", type: "web", color:"#e67e22"},
+{emoji: "✅", label: "Tasks", url: "https://tasks.google.com", type: "web", color:"#27ae60"},
+{emoji: "✉️", label: "Gmail", url: "https://mail.google.com", type: "web", color:"#c0392b"},
+{emoji: "📅", label: "Calendar", url: "https://calendar.google.com", type: "web", color:"#2980b9"},
+{emoji: "📁", label: "Drive", url: "https://drive.google.com", type: "web", color:"#16a085"},
+{emoji: "🧮", label: "Calculator", type: "internal", color:"#a8d5a2"},
+{emoji: "👥", label: "Contacts", type: "internal", color:"#f1c40f"},
+{emoji: "⚙️", label: "Settings", type: "internal", color:"#95a5a6"},
+];
+
+const dockApps = [
+{emoji: "📍", label: "Maps", url: "https://maps.google.com", type: "web", color:"#2ecc71"},
+{emoji: "📄", label: "Docs", url: "https://docs.google.com", type: "web", color:"#3498db"},
+{emoji: "🎵", label: "Music", url: "https://open.spotify.com", type: "web", color:"#1DB954"},
+{emoji: "✉️", label: "Gmail", url: "https://mail.google.com", type: "web", color:"#c0392b"},
+{emoji: "📁", label: "Drive", url: "https://drive.google.com", type: "web", color:"#16a085"},
+{emoji: "🗂️", label: "Switcher", type: "switcher", color:"#34495e"},
+];
+
+function createAppButton(app) {
+const btn = document.createElement("button");
+btn.className = "app-btn";
+const inner = document.createElement("div");
+inner.className = "app-inner";
+const emoji = document.createElement("div");
+emoji.className = "app-emoji";
+emoji.textContent = app.emoji;
+const label = document.createElement("div");
+label.className = "app-label";
+label.textContent = app.label;
+inner.appendChild(emoji);
+inner.appendChild(label);
+btn.appendChild(inner);
+
+btn.addEventListener("click", () => {
+if (app.type === "web") {
+openWebAppWindow(app.label, app.url, app.color);
+} else if (app.type === "internal") {
+openInternalApp(app.label, app.color || "#e0c9af");
+} else if (app.type === "switcher") {
+openAppSwitcher();
+setGlow(app.color || "#e0c9af");
+}
+});
+
+return btn;
+}
+
+function setupGrid() {
+const grid = document.getElementById("app-grid");
+apps.forEach(app => {
+grid.appendChild(createAppButton(app));
+});
+}
+
+function setupDock() {
+const dock = document.getElementById("dock");
+dockApps.forEach(app => {
+dock.appendChild(createAppButton(app));
+});
+}
+
+setupGrid();
+setupDock();
+
+const qpBtn = document.getElementById("quick-panel-btn");
+const qp = document.getElementById("quick-panel");
+qpBtn.addEventListener("click", () => {
+qp.style.display = qp.style.display === "flex" ? "none" : "flex";
+});
+
+function createWindow(title) {
+const win = document.createElement("div");
+win.className = "window";
+const id = "win_" + (++windowCounter);
+
+const titlebar = document.createElement("div");
+titlebar.className = "window-titlebar";
+
+const titleEl = document.createElement("div");
+titleEl.className = "window-title";
+titleEl.textContent = title;
+
+const spacer = document.createElement("div");
+spacer.className = "window-spacer";
+
+const closeBtn = document.createElement("button");
+closeBtn.className = "window-close";
+closeBtn.textContent = "✕";
+closeBtn.addEventListener("click", () => {
+win.remove();
+windows = windows.filter(w => w.id !== id);
+refreshSwitcherList();
+});
+
+titlebar.appendChild(titleEl);
+titlebar.appendChild(spacer);
+titlebar.appendChild(closeBtn);
+
+const body = document.createElement("div");
+body.className = "window-body";
+
+win.appendChild(titlebar);
+win.appendChild(body);
+
+document.getElementById("root").appendChild(win);
+windows.push({id, title, element: win});
+refreshSwitcherList();
+return {id, win, body};
+}
+
+function openInternalApp(label, color) {
+setGlow(color || "#e0c9af");
+if (label === "Settings") openSettingsWindow();
+else if (label === "Calculator") openCalculatorWindow();
+else if (label === "Contacts") openContactsWindow();
+}
+
+function openSettingsWindow() {
+const {body} = createWindow("Settings");
+const p = document.createElement("p");
+p.textContent = "Change the 6-digit PIN for the lock screen.";
+const label = document.createElement("div");
+label.textContent = "New PIN:";
+label.style.marginTop = "8px";
+const input = document.createElement("input");
+input.type = "password";
+input.maxLength = 6;
+input.style.padding = "6px 10px";
+input.style.borderRadius = "999px";
+input.style.border = "1px solid #e2d6c7";
+input.style.marginTop = "4px";
+const btn = document.createElement("button");
+btn.textContent = "Save PIN";
+btn.style.marginTop = "8px";
+btn.style.padding = "6px 14px";
+btn.style.borderRadius = "999px";
+btn.style.border = "none";
+btn.style.background = "#e0c9af";
+btn.style.cursor = "pointer";
+const status = document.createElement("div");
+status.style.marginTop = "6px";
+status.style.fontSize = "0.8rem";
+status.style.color = "#555";
+
+btn.addEventListener("click", () => {
+if (input.value.length === 6) {
+currentPin = input.value;
+localStorage.setItem("alexanderos_pin", input.value);
+status.textContent = "PIN updated.";
+setGlow("#a8d5a2", true);
+} else {
+status.textContent = "PIN must be exactly 6 digits.";
+setGlow("#c0392b", true);
+}
+});
+
+body.appendChild(p);
+body.appendChild(label);
+body.appendChild(input);
+body.appendChild(btn);
+body.appendChild(status);
+}
+
+function openCalculatorWindow() {
+const {body} = createWindow("Calculator");
+const p = document.createElement("p");
+p.textContent = "Simple offline calculator.";
+const input = document.createElement("input");
+input.type = "text";
+input.placeholder = "e.g. 2+2*3";
+input.style.width = "100%";
+input.style.marginTop = "8px";
+input.style.padding = "6px 10px";
+input.style.borderRadius = "8px";
+input.style.border = "1px solid #e2d6c7";
+const btn = document.createElement("button");
+btn.textContent = "Calculate";
+btn.style.marginTop = "8px";
+btn.style.padding = "6px 14px";
+btn.style.borderRadius = "999px";
+btn.style.border = "none";
+btn.style.background = "#a8d5a2";
+btn.style.cursor = "pointer";
+const result = document.createElement("div");
+result.style.marginTop = "6px";
+result.style.fontSize = "0.9rem";
+
+btn.addEventListener("click", () => {
+try {
+const val = Function("return " + input.value)();
+result.textContent = "Result: " + val;
+} catch {
+result.textContent = "Error in expression.";
+}
+});
+
+body.appendChild(p);
+body.appendChild(input);
+body.appendChild(btn);
+body.appendChild(result);
+}
+
+function loadContactsFromStorage() {
+const raw = localStorage.getItem("alexanderos_contacts");
+if (!raw) return [];
+try { return JSON.parse(raw); } catch { return []; }
+}
+function saveContactsToStorage(list) {
+localStorage.setItem("alexanderos_contacts", JSON.stringify(list));
+}
+
+function openContactsWindow() {
+const {body} = createWindow("Contacts");
+const info = document.createElement("p");
+info.textContent = "Local contacts (offline). For full sync, open Google Contacts.";
+const openGC = document.createElement("button");
+openGC.textContent = "Open Google Contacts";
+openGC.style.marginTop = "6px";
+openGC.style.padding = "6px 14px";
+openGC.style.borderRadius = "999px";
+openGC.style.border = "none";
+openGC.style.background = "#f1c40f";
+openGC.style.cursor = "pointer";
+openGC.addEventListener("click", () => {
+window.open("https://contacts.google.com", "_blank");
+setGlow("#f1c40f");
+});
+
+const listDiv = document.createElement("div");
+listDiv.style.marginTop = "10px";
+
+const nameInput = document.createElement("input");
+nameInput.placeholder = "Name";
+nameInput.style.width = "100%";
+nameInput.style.marginTop = "8px";
+nameInput.style.padding = "6px 10px";
+nameInput.style.borderRadius = "8px";
+nameInput.style.border = "1px solid #e2d6c7";
+
+const phoneInput = document.createElement("input");
+phoneInput.placeholder = "Phone";
+phoneInput.style.width = "100%";
+phoneInput.style.marginTop = "4px";
+phoneInput.style.padding = "6px 10px";
+phoneInput.style.borderRadius = "8px";
+phoneInput.style.border = "1px solid #e2d6c7";
+
+const addBtn = document.createElement("button");
+addBtn.textContent = "Add contact";
+addBtn.style.marginTop = "8px";
+addBtn.style.padding = "6px 14px";
+addBtn.style.borderRadius = "999px";
+addBtn.style.border = "none";
+addBtn.style.background = "#f1c40f";
+addBtn.style.cursor = "pointer";
+
+let contacts = loadContactsFromStorage();
+
+function renderContacts() {
+listDiv.innerHTML = "";
+if (!contacts.length) {
+listDiv.textContent = "No contacts yet.";
+return;
+}
+contacts.forEach((c, idx) => {
+const row = document.createElement("div");
+row.style.display = "flex";
+row.style.justifyContent = "space-between";
+row.style.alignItems = "center";
+row.style.marginTop = "4px";
+const text = document.createElement("span");
+text.textContent = c.name + " — " + c.phone;
+const del = document.createElement("button");
+del.textContent = "✕";
+del.style.border = "none";
+del.style.background = "transparent";
+del.style.cursor = "pointer";
+del.addEventListener("click", () => {
+contacts.splice(idx,1);
+saveContactsToStorage(contacts);
+renderContacts();
+});
+row.appendChild(text);
+row.appendChild(del);
+listDiv.appendChild(row);
+});
+}
+
+addBtn.addEventListener("click", () => {
+if (!nameInput.value || !phoneInput.value) return;
+contacts.push({name:nameInput.value, phone:phoneInput.value});
+saveContactsToStorage(contacts);
+nameInput.value = "";
+phoneInput.value = "";
+renderContacts();
+document.getElementById("notif-card").textContent = "Contact added.";
+setGlow("#f1c40f", true);
+});
+
+renderContacts();
+
+body.appendChild(info);
+body.appendChild(openGC);
+body.appendChild(nameInput);
+body.appendChild(phoneInput);
+body.appendChild(addBtn);
+body.appendChild(listDiv);
+}
+
+function openWebAppWindow(title, url, color) {
+setGlow(color || "#e0c9af");
+const {body} = createWindow(title);
+
+const info = document.createElement("p");
+info.textContent = "This app opens in your browser. Click below to launch it.";
+
+const btn = document.createElement("button");
+btn.textContent = "Launch " + title;
+btn.style.marginTop = "8px";
+btn.style.padding = "8px 16px";
+btn.style.borderRadius = "999px";
+btn.style.border = "none";
+btn.style.background = color || "#e0c9af";
+btn.style.color = "#fff";
+btn.style.cursor = "pointer";
+
+btn.addEventListener("click", () => {
+window.open(url, "_blank");
+document.getElementById("notif-card").textContent = title + " opened in browser.";
+setGlow(color || "#e0c9af", true);
+});
+
+body.appendChild(info);
+body.appendChild(btn);
+}
+
+function refreshSwitcherList() {
+const list = document.getElementById("switcher-list");
+list.innerHTML = "";
+windows.forEach(w => {
+const item = document.createElement("div");
+item.className = "switcher-item";
+item.textContent = w.title;
+item.addEventListener("click", () => {
+w.element.style.zIndex = 50;
+setTimeout(() => w.element.style.zIndex = 30, 500);
+closeAppSwitcher();
+});
+list.appendChild(item);
+});
+}
+
+function openAppSwitcher() {
+document.getElementById("app-switcher").style.display = "flex";
+}
+function closeAppSwitcher() {
+document.getElementById("app-switcher").style.display = "none";
+}
+document.getElementById("app-switcher").addEventListener("click", e => {
+if (e.target.id === "app-switcher") closeAppSwitcher();
+});
+if ("serviceWorker" in navigator) {
+navigator.serviceWorker.register("sw.js");
+}
+
+</script>
+</body>
+</html>
