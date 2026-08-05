@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#e0c9af">
 <meta charset="UTF-8">
-<title>AlexanderOS Web</title>
+<title>The Hub (google edition) Web</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
@@ -401,7 +400,7 @@ const pinInput = document.getElementById("pin-input");
 const errorEl = document.getElementById("lock-error");
 
 if (!currentPin) {
-errorEl.textContent = "PIN not set. Restart AlexanderOS.";
+errorEl.textContent = "PIN not set. Restart The Hub.";
 setGlow("#c0392b", true);
 return;
 }
@@ -419,9 +418,7 @@ setGlow("#c0392b", true);
 
 function updateStatus() {
 const wifi = document.getElementById("wifi-status");
-const bt = document.getElementById("bt-status");
 wifi.textContent = "Wi‑Fi: " + (navigator.onLine ? "Online" : "Offline");
-bt.textContent = "BT: Unknown";
 }
 updateStatus();
 window.addEventListener("online", updateStatus);
@@ -456,6 +453,7 @@ const apps = [
 {emoji: "🧮", label: "Calculator", type: "internal", color:"#a8d5a2"},
 {emoji: "👥", label: "Contacts", type: "internal", color:"#f1c40f"},
 {emoji: "⚙️", label: "Settings", type: "internal", color:"#95a5a6"},
+{emoji: "🎮", label: "Games", type: "internal", color:"#95a5a6"}
 ];
 
 const dockApps = [
@@ -464,7 +462,6 @@ const dockApps = [
 {emoji: "🎵", label: "Music", url: "https://open.spotify.com", type: "web", color:"#1DB954"},
 {emoji: "✉️", label: "Gmail", url: "https://mail.google.com", type: "web", color:"#c0392b"},
 {emoji: "📁", label: "Drive", url: "https://drive.google.com", type: "web", color:"#16a085"},
-{emoji: "🗂️", label: "Switcher", type: "switcher", color:"#34495e"},
 ];
 
 function createAppButton(app) {
