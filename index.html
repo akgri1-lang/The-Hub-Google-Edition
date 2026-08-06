@@ -292,15 +292,6 @@ bar.style.boxShadow = "0 0 12px rgba(0,0,0,0.2)";
 
 
 
-function updateLockTime() {
-const now = new Date();
-document.getElementById("lock-time").textContent =
-now.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
-document.getElementById("lock-date").textContent =
-now.toLocaleDateString(undefined, {weekday: "long", day: "numeric", month: "long", year: "numeric"});
-}
-setInterval(updateLockTime, 1000);
-updateLockTime();
 
 function updateHomeTime() {
 const now = new Date();
@@ -309,32 +300,6 @@ now.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
 }
 setInterval(updateHomeTime, 1000);
 updateHomeTime();
-
-document.getElementById("unlock-btn").addEventListener("click", tryUnlock);
-document.getElementById("pin-input").addEventListener("keydown", e => {
-if (e.key === "Enter") tryUnlock();
-});
-
-function tryUnlock() {
-const pinInput = document.getElementById("pin-input");
-const errorEl = document.getElementById("lock-error");
-
-if (!currentPin) {
-errorEl.textContent = "PIN not set. Restart The Hub.";
-setGlow("#c0392b", true);
-return;
-}
-
-if (pinInput.value === currentPin) {
-errorEl.textContent = "";
-document.getElementById("lock-screen").style.display = "none";
-document.getElementById("home-screen").style.display = "flex";
-setGlow("#a8d5a2");
-} else {
-errorEl.textContent = "Incorrect PIN. Try again.";
-setGlow("#c0392b", true);
-}
-}
 
 function updateStatus() {
 const wifi = document.getElementById("wifi-status");
